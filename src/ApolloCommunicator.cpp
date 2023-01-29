@@ -7,6 +7,7 @@
 #include <cassert>
 
 namespace ApolloCommunicator {
+    bool shuttingDown = false;
 
     int str_to_num(std::string_view str) {
         int num;
@@ -53,7 +54,7 @@ namespace ApolloCommunicator {
         return std::async(std::launch::async, []() {
             char buffer[4096]{};
 
-            while (true) {
+            while (!shuttingDown) {
                 auto count = std::cin.get(buffer, sizeof(buffer)).gcount();
 
                 std::string_view sv{buffer, buffer + count};
@@ -72,4 +73,9 @@ namespace ApolloCommunicator {
             }
         });
     }
+
+    void requestShutdown() {
+        shuttingDown = true;
+    }
+
 }

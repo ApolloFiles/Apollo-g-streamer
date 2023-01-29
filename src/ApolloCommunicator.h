@@ -11,7 +11,6 @@ namespace ApolloCommunicator {
     };
 
     struct start {
-
     };
 
     using apollo_cmd_t = std::variant<start, seek>;
@@ -19,4 +18,6 @@ namespace ApolloCommunicator {
     inline SpScQueue<apollo_cmd_t> apollo_commands;
 
     std::future<void> startThread();
+
+    void requestShutdown();
 }
