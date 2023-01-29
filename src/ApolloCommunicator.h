@@ -2,9 +2,11 @@
 
 #include <future>
 #include <variant>
+#include <vector>
 #include "SpScQueue.h"
 
 namespace ApolloCommunicator {
+    constexpr const char* OUT_MANIFEST_READY = "MANIFEST_READY";
 
     struct seek {
         int time;
@@ -20,4 +22,6 @@ namespace ApolloCommunicator {
     std::future<void> startThread();
 
     void requestShutdown();
+
+    void sendSimple(const char* command, const std::vector<std::string>& data = {});
 }

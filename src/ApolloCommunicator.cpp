@@ -78,4 +78,16 @@ namespace ApolloCommunicator {
         shuttingDown = true;
     }
 
+    void sendSimple(const char* command, const std::vector<std::string>& data) {
+        std::cout << "::" << command << ':';
+
+        for (const auto& value: data) {
+            std::cout << value << ':';
+        }
+        if (data.empty()) {
+            std::cout << ':';
+        }
+
+        std::cout << std::endl;
+    }
 }
