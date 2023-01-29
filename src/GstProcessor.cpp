@@ -13,7 +13,6 @@ namespace GstProcessor {
     const std::string MANIFEST_TARGET_LOCATION = HLS_TARGET_LOCATION + "manifest.m3u8";
 
     bool manifestReady = false;
-    bool pipelineEOS = false;
 
     static std::string concatPipelineParts(const std::string& srcString, const std::string& sinkString,
                                            const std::vector<std::string>& video,
@@ -40,9 +39,8 @@ namespace GstProcessor {
         return 0;
     }
 
-    std::string generatePipelineDescription(bool forceSwDecoding = false) {
-        // TODO: input file is provided by parent process (has to start with file:// and is expected to be properly encoded)
-        std::string srcDescription = R"(uridecodebin name=src uri="file:///home/christian/Downloads/apollo-g-streamer/simple.mkv")";
+    std::string generatePipelineDescription(const std::string& fileUri, bool forceSwDecoding = false) {
+        std::string srcDescription = "uridecodebin name=src uri=\"" + fileUri + "\"";
         if (forceSwDecoding) {
             srcDescription += " force-sw-decoders=1";
         }
@@ -139,7 +137,6 @@ namespace GstProcessor {
                     return 1;
                 case GST_MESSAGE_EOS:
                     std::cout << "End-Of-Stream reached." << std::endl;
-                    pipelineEOS = true;
                     // TODO: maybe pause the pipeline instead of stopping it and timeout if no further commands are received?
 
                     if (!checkAndNotifyIfManifestReady()) {
@@ -218,13 +215,13 @@ namespace GstProcessor {
         return pipelineExitCode;
     }
 
-    int init(int argc, char* argv[]) {
+    int init(int argc, char* argv[], const std::string& fileUri) {
         gst_init(&argc, &argv);
 
         std::filesystem::create_directories(HLS_TARGET_LOCATION);
         std::filesystem::remove(MANIFEST_TARGET_LOCATION);
 
-        auto pipelineDescription = generatePipelineDescription();
+        auto pipelineDescription = generatePipelineDescription(fileUri);
 
         int pipelineExitCode = startPipeline(pipelineDescription, true);
         if (pipelineExitCode != -20) {
@@ -232,7 +229,7 @@ namespace GstProcessor {
         }
 
         std::filesystem::remove(MANIFEST_TARGET_LOCATION);
-        pipelineDescription = generatePipelineDescription(true);
+        pipelineDescription = generatePipelineDescription(fileUri, true);
 
         pipelineExitCode = startPipeline(pipelineDescription, false);
         if (pipelineExitCode != -20) {
