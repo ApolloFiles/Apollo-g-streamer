@@ -232,7 +232,7 @@ namespace GstProcessor {
         pipelineDescription = generatePipelineDescription(fileUri, true);
 
         pipelineExitCode = startPipeline(pipelineDescription, false);
-        if (pipelineExitCode != -20) {
+        if (pipelineExitCode == -20) {
             std::cerr << "Pipeline has been restarted with software decoding, but still failed..." << std::endl;
         }
         return pipelineExitCode;
