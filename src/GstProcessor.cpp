@@ -78,7 +78,7 @@ namespace GstProcessor {
     /**
      * @return false if the manifest is broken (e.g. due to a bug in the NVIDIA VP9 decoder)
      */
-    bool checkAndNotifyIfManifestReady() {
+    bool checkAndNotifyIfManifestReady(GstElement* pipeline) {
         if (manifestReady) {
             return true;
         }
@@ -95,8 +95,15 @@ namespace GstProcessor {
             return false;
         }
 
-        ApolloCommunicator::sendSimple(ApolloCommunicator::OUT_MANIFEST_READY, {MANIFEST_TARGET_LOCATION});
-        manifestReady = true;
+        // TODO: have a duration_changed messsage instead of sending it with the manifest?
+        auto duration = getDuration(pipeline);
+        if (duration > 0) {
+            ApolloCommunicator::sendSimple(
+                    ApolloCommunicator::OUT_MANIFEST_READY,
+                    {MANIFEST_TARGET_LOCATION, std::to_string(duration / GST_SECOND)}
+            );
+            manifestReady = true;
+        }
 
         return true;
     }
@@ -104,21 +111,11 @@ namespace GstProcessor {
     int pipelineLoop(GstElement* pipeline) {
         GstBus* bus = gst_element_get_bus(pipeline);
         while (true) {
-//            auto position = getPosition(pipeline);
-//            if (position > 0) {
-//                auto duration = getDuration(pipeline);
-//
-//                std::cout << position << " / " << duration
-//                          << " (" << (((double) position / (double) duration) * 100) << " %)"
-//                          << std::endl;
-//            }
-
-            if (!checkAndNotifyIfManifestReady()) {
+            if (!checkAndNotifyIfManifestReady(pipeline)) {
                 return -20;
             }
 
-            auto messageTypes = GST_MESSAGE_ERROR | GST_MESSAGE_EOS |
-                                GST_MESSAGE_STATE_CHANGED | GST_MESSAGE_DURATION_CHANGED;
+            auto messageTypes = GST_MESSAGE_ERROR | GST_MESSAGE_EOS | GST_MESSAGE_STATE_CHANGED;
             GstMessage* msg = gst_bus_timed_pop_filtered(bus, 1000 * 1000 * 1000, static_cast<GstMessageType>(messageTypes));
             if (msg == nullptr) {
                 continue;
@@ -139,7 +136,7 @@ namespace GstProcessor {
                     std::cout << "End-Of-Stream reached." << std::endl;
                     // TODO: maybe pause the pipeline instead of stopping it and timeout if no further commands are received?
 
-                    if (!checkAndNotifyIfManifestReady()) {
+                    if (!checkAndNotifyIfManifestReady(pipeline)) {
                         return 1;
                     }
 
@@ -158,14 +155,6 @@ namespace GstProcessor {
                               << gst_element_state_get_name(newState)
                               << '\n';
                     dumpPipelineDebugGraph(pipeline, newState);
-
-                    break;
-                case GST_MESSAGE_DURATION_CHANGED:
-                    std::cout << "duration changed to: ";
-                    gint64 duration;
-                    if (gst_element_query_duration(pipeline, GST_FORMAT_TIME, &duration)) {
-                        std::cout << duration << std::endl;
-                    }
 
                     break;
                 default:
@@ -190,6 +179,14 @@ namespace GstProcessor {
             return 1;
         }
 
+        /* Start playing */
+        GstStateChangeReturn stateChangeRet = gst_element_set_state(pipeline, GST_STATE_READY);
+        if (stateChangeRet == GST_STATE_CHANGE_FAILURE) {
+            g_printerr("Unable to set the pipeline to the READY state.\n");
+            destroyPipeline(pipeline);
+            return 1;
+        }
+
         if (waitForApolloStartCommand) {
             std::cout << "Pipeline ready – waiting for start command..." << std::endl;
             auto res = ApolloCommunicator::apollo_commands.pop_blocking(30000);
@@ -203,9 +200,9 @@ namespace GstProcessor {
         g_print("Starting pipeline\n");
 
         /* Start playing */
-        const GstStateChangeReturn stateChangeRet = gst_element_set_state(pipeline, GST_STATE_PLAYING);
+        stateChangeRet = gst_element_set_state(pipeline, GST_STATE_PLAYING);
         if (stateChangeRet == GST_STATE_CHANGE_FAILURE) {
-            g_printerr("Unable to set the pipeline to the playing state.\n");
+            g_printerr("Unable to set the pipeline to the PLAYING state.\n");
             destroyPipeline(pipeline);
             return 1;
         }
