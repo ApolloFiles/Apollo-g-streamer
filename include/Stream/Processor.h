@@ -2,6 +2,6 @@
 
 #include <string>
 
-namespace GstProcessor {
+namespace gst {
     int init(int argc, char* argv[], const std::string& fileUri);
 }

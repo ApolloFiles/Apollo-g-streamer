@@ -35,10 +35,15 @@ struct SpScQueue {
         return tmp;
     }
 
-    T pop_blocking(uint64_t timeoutMillis) {
+    template<class Rep, class Period>
+    std::optional<T> pop_blocking(const std::chrono::duration<Rep, Period>& timeout) {
         std::unique_lock<std::mutex> lock(m);
+        auto end = std::chrono::steady_clock::now() + timeout;
         while (data.empty()) {
-            cv.wait_for(lock, std::chrono::milliseconds(timeoutMillis));
+            cv.wait_until(lock, end);
+            if(std::chrono::steady_clock::now() >= end) {
+                return {};
+            }
         }
         T tmp = data.front();
         data.pop_front();

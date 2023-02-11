@@ -47,11 +47,11 @@ namespace ApolloCommunicator {
         return token;
     }
 
-    std::future<void> startThread() {
+    std::thread startThread() {
         // STATE PLAYING\n
         // SEEK 120\n
         // TARGET_TIME 420\n
-        return std::async(std::launch::async, []() {
+        return std::thread([]() {
             char buffer[4096]{};
 
             while (!shuttingDown) {

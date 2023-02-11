@@ -1,7 +1,7 @@
+#include "ApolloCommunicator.h"
+#include "Stream/Processor.h"
 #include <filesystem>
 #include <iostream>
-#include "ApolloCommunicator.h"
-#include "GstProcessor.h"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -20,11 +20,11 @@ int main(int argc, char* argv[]) {
 
     auto communicatorThread = ApolloCommunicator::startThread();
 
-    int exitCode = GstProcessor::init(argc, argv, fileUri);
+    int exitCode = gst::init(argc, argv, fileUri);
     std::cout << "GStreamer exited with code " << exitCode << std::endl;
     ApolloCommunicator::requestShutdown();
     std::cout << "Waiting for communicator thread to exit..." << std::endl;
-    communicatorThread.wait();
+    communicatorThread.join();
     std::cout << "Communicator thread exited" << std::endl;
 
     std::cout << "Exiting with code " << exitCode << std::endl;
