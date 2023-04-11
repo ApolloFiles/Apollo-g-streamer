@@ -42,6 +42,14 @@ namespace GstProcessor {
     }
 
     std::string generatePipelineDescription(const std::string& fileUri, bool forceSwDecoding = false) {
+        auto targetFps = 30;
+        if (const char* env_p = std::getenv("APOLLO_GST_TARGET_FPS")) {
+            targetFps = std::stoi(env_p);
+        } else {
+            std::cout << "APOLLO_GST_TARGET_FPS env not set, using default value of " << targetFps << std::endl;
+        }
+        const auto targetFpsString = std::to_string(targetFps);
+
         std::string srcDescription = "uridecodebin name=src uri=\"" + fileUri + "\"";
         if (forceSwDecoding) {
             srcDescription += " force-sw-decoders=1";
@@ -53,9 +61,10 @@ namespace GstProcessor {
                 "playlist-location=" + MANIFEST_TARGET_LOCATION;
 
         // TODO: Auto detect streams; Have them provided/controlled by the parent process
-        // TODO: proper framerate detection (currently hardcoded to 24fps)
         // TODO: proper bitrate detection (currently hardcoded to 8192kbps)
-        std::string videoBinDescription = "videoconvert ! videorate ! video/x-raw,format=I420,framerate=24/1 ! x264enc bitrate=8192 key-int-max=24";
+        std::string videoBinDescription =
+                "videoconvert ! videorate ! video/x-raw,format=I420,framerate=" + targetFpsString +
+                "/1 ! x264enc bitrate=8192 key-int-max=" + targetFpsString;
         std::string audioBinDescription = "audioconvert ! audiorate ! audio/x-raw,channels=2 ! avenc_aac maxrate=48000";
 
         return concatPipelineParts(srcDescription, sinkDescription,
