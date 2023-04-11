@@ -9,7 +9,9 @@
 #include "ApolloCommunicator.h"
 
 namespace GstProcessor {
-    constexpr std::string HLS_TARGET_LOCATION = "./hls_out/";
+    constexpr std::string TARGET_SEGMENT_DURATION = "2";
+
+    constexpr std::string HLS_TARGET_LOCATION = "./gst_v/";
     const std::string MANIFEST_TARGET_LOCATION = HLS_TARGET_LOCATION + "manifest.m3u8";
 
     bool manifestReady = false;
@@ -45,9 +47,10 @@ namespace GstProcessor {
             srcDescription += " force-sw-decoders=1";
         }
 
-        std::string sinkDescription = "hlssink2 name=sink max-files=0 playlist-length=0 target-duration=2 "
-                                      "location=./hls_out/%d.ts "
-                                      "playlist-location=" + MANIFEST_TARGET_LOCATION;
+        std::string sinkDescription =
+                "hlssink2 name=sink max-files=0 playlist-length=0 target-duration=" + TARGET_SEGMENT_DURATION + " " +
+                "location=" + HLS_TARGET_LOCATION + "%d.ts " +
+                "playlist-location=" + MANIFEST_TARGET_LOCATION;
 
         // TODO: Auto detect streams; Have them provided/controlled by the parent process
         // TODO: proper framerate detection (currently hardcoded to 24fps)
@@ -67,7 +70,7 @@ namespace GstProcessor {
         std::ifstream manifest(MANIFEST_TARGET_LOCATION);
         std::string line;
         while (std::getline(manifest, line)) {
-            if (line == "#EXT-X-TARGETDURATION:2") {
+            if (line == ("#EXT-X-TARGETDURATION:" + TARGET_SEGMENT_DURATION)) {
                 return false;
             }
         }
