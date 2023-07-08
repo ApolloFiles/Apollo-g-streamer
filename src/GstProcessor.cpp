@@ -9,10 +9,10 @@
 #include "ApolloCommunicator.h"
 
 namespace GstProcessor {
-    constexpr std::string TARGET_SEGMENT_DURATION = "2";
+    /*constexpr*/ std::string TARGET_SEGMENT_DURATION = "2";
 
-    constexpr std::string HLS_TARGET_LOCATION = "./gst_v/";
-    const std::string MANIFEST_TARGET_LOCATION = HLS_TARGET_LOCATION + "manifest.m3u8";
+    /*constexpr*/ std::string HLS_TARGET_LOCATION = "./gst_v/";
+    /*const*/ std::string MANIFEST_TARGET_LOCATION = HLS_TARGET_LOCATION + "manifest.m3u8";
 
     bool manifestReady = false;
 

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     auto communicatorThread = ApolloCommunicator::startThread();
 
     int exitCode = GstProcessor::init(argc, argv, fileUri);
-    std::cout << "GStreamer exited with code " << exitCode << std::endl;
+    std::cout << "\n\nGStreamer exited with code " << exitCode << std::endl;
     ApolloCommunicator::requestShutdown();
     std::cout << "Waiting for communicator thread to exit..." << std::endl;
     communicatorThread.wait();
