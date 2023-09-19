@@ -21,4 +21,4 @@ COPY src/ ./src/
 RUN cmake . && \
     make
 
-CMD bash -c "mkdir --verbose --parents /build-output/ && cp --verbose ./apollo_g_streamer /build-output/ && file ./apollo_g_streamer"
+CMD bash -c "mkdir --verbose --parents /build-output/ && cp --verbose ./apollo_g_streamer /build-output/ && chown --changes --recursive 1000:1000 /build-output/ && file ./apollo_g_streamer"

@@ -3,6 +3,8 @@ project(apollo_g_streamer)
 
 set(CMAKE_CXX_STANDARD 20)
 
+#set(CMAKE_CXX_FLAGS "-O3")
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(GST REQUIRED gstreamer-1.0>=1.4)
 

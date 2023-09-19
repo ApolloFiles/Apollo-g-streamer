@@ -7,15 +7,19 @@
 
 namespace ApolloCommunicator {
     constexpr const char* OUT_MANIFEST_READY = "MANIFEST_READY";
+    constexpr const char* OUT_PIPELINE_STATUS = "PIPELINE_STATUS";
+
+    struct play {
+    };
+
+    struct pause {
+    };
 
     struct seek {
         int time;
     };
 
-    struct start {
-    };
-
-    using apollo_cmd_t = std::variant<start, seek>;
+    using apollo_cmd_t = std::variant<play, pause, seek>;
 
     inline SpScQueue<apollo_cmd_t> apollo_commands;
 
